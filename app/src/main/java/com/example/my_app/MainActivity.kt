@@ -10,6 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.material3.TextField
+import androidx.compose.material3.Button
+import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.my_app.ui.theme.My_appTheme
@@ -18,119 +25,120 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Text
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.util.fastCbrt
 
 //modifier changes how the composable looks or behave
 //composable are functions that builds UI in jetpack compose
+//composable functions cant be called through button onClick function
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            My_appTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    //Column {
-                       // Add_Image()
-                   
-                        Box {
-                            AsyncImage(
-                                model = "https://mlo1wbhvgmgt.i.optimole.com/w:1536/h:864/q:mauto/g:sm/f:best/https://pethero.co.za/wp-content/uploads/2026/02/Indoor-Cats-Blog-Banner.png",
-                                contentDescription = "cat", modifier = Modifier.size(2uu00.dp)
-                            )
-                            Column {
-                                Text("This is an online image")
-                            }
-                        }
+        DiaryScreen()
 
-//                                Greeting(
-//                                    name = "Reshma",
-//                                    modifier = Modifier.padding(innerPadding)
-                    //}
-                }
+        }
+
+    }
+}
+var showView = false
+@Composable
+fun DiaryScreen() {
+    Column {
+
+        var showCreate by remember { mutableStateOf(false) }
+        var showView by remember { mutableStateOf(false) }
+        Button(
+            onClick = {
+                showCreate = true //initally showCreate is false, but when clicked it becomes true
+                showView = false
             }
+        ) {
+            Text("Create New Entries")
         }
 
-//                    Greeting(name="lala",
-//                        modifier = Modifier.padding(paddingValues = innerPadding))
-//                    Multiline(name="rosa",
-//                        modifier = Modifier.padding(paddingValues = innerPadding))
+        if (showCreate) {
+            Create()
+
+        }
+
+        Button(
+            onClick = {
+                showView = true
+                showCreate = false
+            }
+        ) { Text("View old entries") }
+
+        if (showView) {
+            View()
+
+        }
+        val context = LocalContext.current
+        Button(
+            onClick = {
+                context.deleteFile("diary.txt")
+            }
+        ) {
+            Text("Delete All Entries")
+        }
+
     }
 }
 
 
-
-
-
-
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+fun View(){
+    val context = LocalContext.current
+    var diaryContent by remember{
+        mutableStateOf("")
+    }
+    diaryContent= context.openFileInput("diary.txt").bufferedReader().readText()
+    Text(diaryContent)
+}
+@Composable
+fun Create() {
+    // adds a TextField
+    val context = LocalContext.current //gives access to the resources of android such as database files
+
+    var entryText by remember { //a variable that stores the text entered by the user
+        //remember remembers the value from previous UI updates (recompositions) instead of creating a fresh empty value every time.
+        mutableStateOf("")  //creates a state object, initial value is an empty string, when the value isnt empty string or when the value changes ui is automatically updated
+
+    }
     Column {
-        Text(
-            text = "This is $name",
-            modifier = modifier ///first modifier is the type and the next modifier is the value that means there exists no modification
-        )
-        Row {
-            Text(
-                text = "This is $name \t",
-                modifier = modifier)
-            Text( text = "This is rr",
-                modifier = modifier
-            )
+        TextField( ///a component that allows user to type text
+            value = entryText,  //the text is displayed from the textfield in which the value is got by the entryText
+            onValueChange = { //runs everytime the value is added or deleted
+                entryText = it //stores whatever the user have typed
+            })
+  ///save button
+        //after writing the entry, when clicked on the button the entry is saved in "diary.txt", the text box is emptied for new journal entry
+        Button(
+            onClick = {
+                context.openFileOutput("diary.txt", Context.MODE_APPEND).use { outputStream -> //.use opens and close file automatically  
+                    //outputStream is the connection to the file
+                    outputStream.write((entryText + "\n").toByteArray()) //data flows from entryText -> toByteArray()->outputStream->diary.txt
+                }
+             entryText ="" //clears the text field
+            }) {
 
+            Text("Save")
         }
-        Row{
-            Text(
-                text = "\t\t this is lala",
-                modifier = modifier
-            )
-        }
-    }
-}
-@Composable
-fun Multiline(name: String, modifier: Modifier = Modifier) {
-    Column{
-    Text(
-        text = "This is $name",
-        modifier = modifier
-    )
 
-    Text(
-        text = "This is rr",
-        modifier = modifier.background(Color.Cyan)
-    )
-    }
-}
-
-@Composable
-fun Add_Image() {
-    Column {
-        Image(
-            painter = painterResource(id = R.drawable.img),
-            contentDescription = "This is a computerr",
-
-        )
-        Text(text= "this is computer")
-
-        Image(
-            painter = painterResource(id = R.drawable.butterfly),
-            contentDescription = "This is a butterfly",
-
-        )
-        Text(text= "this is butterfly")
     }
 }
 
 
 ///basically to preview only on the desktop
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    My_appTheme {
-        Greeting("Kotlin")
-    }
-}
+//@Preview(showBackground = true)
+//@Composable
+//fun GreetingPreview() {
+//    My_appTheme {
+//        Greeting("Kotlin")
+//    }
+//}
