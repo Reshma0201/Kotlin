@@ -49,13 +49,14 @@ class MainActivity : ComponentActivity() {
 var showView = false
 @Composable
 fun DiaryScreen() {
+    var diaryContent by remember { mutableStateOf("") }
     Column {
 
         var showCreate by remember { mutableStateOf(false) }
         var showView by remember { mutableStateOf(false) }
         Button(
             onClick = {
-                showCreate = true //initally showCreate is false, but when clicked it becomes true
+                showCreate = true //initially showCreate is false, but when clicked it becomes true
                 showView = false
             }
         ) {
@@ -81,6 +82,8 @@ fun DiaryScreen() {
         val context = LocalContext.current
         Button(
             onClick = {
+                var showView = false
+
                 context.deleteFile("diary.txt")
             }
         ) {
@@ -97,8 +100,13 @@ fun View(){
     var diaryContent by remember{
         mutableStateOf("")
     }
-    diaryContent= context.openFileInput("diary.txt").bufferedReader().readText()
-    Text(diaryContent)
+    diaryContent = context.openFileInput("diary.txt").bufferedReader().readText()
+    if(diaryContent.isEmpty())
+        Text("empty")
+    else{
+
+    Text(diaryContent)}
+
 }
 @Composable
 fun Create() {
@@ -126,7 +134,6 @@ fun Create() {
                 }
              entryText ="" //clears the text field
             }) {
-
             Text("Save")
         }
 
