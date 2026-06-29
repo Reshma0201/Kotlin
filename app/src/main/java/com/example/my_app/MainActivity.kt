@@ -17,6 +17,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material3.TextField
 import androidx.compose.material3.Button
 import android.content.Context
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.my_app.ui.theme.My_appTheme
@@ -46,43 +51,49 @@ class MainActivity : ComponentActivity() {
 
     }
 }
-var showView = false
+
 @Composable
 fun DiaryScreen() {
-    var diaryContent by remember { mutableStateOf("") }
-    Column {
+    @Composable
+    fun DiaryScreen() {
 
         var showCreate by remember { mutableStateOf(false) }
-        var showView by remember { mutableStateOf(false) }
-        Button(
-            onClick = {
-                showCreate = true //initially showCreate is false, but when clicked it becomes true
-                showView = false
+        var showView by remember { mutableStateOf(true) }
+
+        Scaffold(
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        showCreate = true
+                        showView = false
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Entry"
+                    )
+                }
             }
-        ) {
-            Text("Create New Entries")
-        }
+        ) { padding ->
 
-        if (showCreate) {
-            Create()
+            Column(
+                modifier = Modifier.padding(padding)
+            ) {
 
-        }
+                if (showView) {
+                    View()
+                }
 
-        Button(
-            onClick = {
-                showView = true
-                showCreate = false
+                if (showCreate) {
+                    Create()
+                }
+
             }
-        ) { Text("View old entries") }
-
-        if (showView) {
-            View()
-
         }
+    }
         val context = LocalContext.current
         Button(
             onClick = {
-                var showView = false
 
                 context.deleteFile("diary.txt")
             }
@@ -100,14 +111,13 @@ fun View(){
     var diaryContent by remember{
         mutableStateOf("")
     }
-    diaryContent = context.openFileInput("diary.txt").bufferedReader().readText()
+    LaunchedEffect(Unit) { diaryContent = try { context.openFileInput("diary.txt") .bufferedReader() .readText() } catch (e: Exception) { "" } }
     if(diaryContent.isEmpty())
         Text("empty")
     else{
-
     Text(diaryContent)}
-
 }
+
 @Composable
 fun Create() {
     // adds a TextField
